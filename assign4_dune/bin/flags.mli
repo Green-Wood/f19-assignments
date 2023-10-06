@@ -1,3 +1,5 @@
+open! Core
+
 val set_verbose : bool -> unit
 val verbose : unit -> bool
 val set_extra_verbose : bool -> unit

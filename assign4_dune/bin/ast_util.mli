@@ -1,3 +1,5 @@
+open! Core
+
 module Type : sig
   open Ast.Type
 

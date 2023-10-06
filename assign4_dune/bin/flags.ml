@@ -1,3 +1,5 @@
+open! Core
+
 let _verbose : bool ref = ref false
 let verbose () = !_verbose
 let set_verbose b = _verbose := b
