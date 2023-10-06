@@ -1,4 +1,3 @@
-open! Flags (* TODO remove this *)
 open Core
 open Result.Monad_infix
 open Ast

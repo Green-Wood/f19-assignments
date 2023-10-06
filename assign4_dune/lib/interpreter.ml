@@ -1,4 +1,3 @@
-open Flags
 open Core
 open Ast
 
@@ -52,7 +51,7 @@ and ( |-> ) ((e, hole) : Expr.t * (Expr.t -> Expr.t)) (next : unit -> outcome) :
 let rec eval e =
   match trystep e with
   | Step e' ->
-    if extra_verbose ()
+    if Flags.extra_verbose ()
     then Printf.printf "Stepped:\n%s\n|->\n%s\n\n" (Expr.to_string e) (Expr.to_string e');
     eval e'
   | Val -> Ok e
