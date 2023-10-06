@@ -12,6 +12,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
   | Expr.Binop { left; right; _ } ->
     typecheck_expr ctx left
     >>= fun tau_left ->
+    (* TODO replace >>= with let bind *)
     typecheck_expr ctx right
     >>= fun tau_right ->
     (match tau_left, tau_right with
