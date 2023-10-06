@@ -1,2 +1,6 @@
-(test
- (name assign4_dune))
+(library
+ (name lam_test)
+ (libraries core core_unix lam)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))
