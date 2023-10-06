@@ -1,2 +1,14 @@
+(ocamllex lexer)
+
+(menhir
+ (modules grammar))
+
 (library
- (name assign4_dune))
+ (name lam)
+ (libraries core core_unix.command_unix)
+ (flags
+  (:standard -w -39-32-27))
+ ; TODO remove after build
+ ; TODO add test especially inline tests
+ (preprocess
+  (pps ppx_jane)))

@@ -1,21 +1,21 @@
-open Flags
+open Lam
 open Core
 open Result.Monad_infix
-open Ast
 
-let interpret (expr : Expr.t) =
-  if verbose ()
+let interpret (expr : Ast.Expr.t) =
+  if Flags.verbose ()
   then
     Printf.printf
       "Expr: %s\n\n"
-      (Expr.to_string (if testing () then Ast_util.Expr.to_debruijn expr else expr));
+      (Ast.Expr.to_string
+         (if Flags.testing () then Ast_util.Expr.to_debruijn expr else expr));
   Typecheck.typecheck expr
   >>= fun ty ->
-  if verbose ()
+  if Flags.verbose ()
   then
     Printf.printf
       "Type: %s\n\n"
-      (Type.to_string (if testing () then Ast_util.Type.to_debruijn ty else ty));
+      (Ast.Type.to_string (if Flags.testing () then Ast_util.Type.to_debruijn ty else ty));
   Interpreter.eval expr
 ;;
 
@@ -26,7 +26,7 @@ let run (filepath : string) =
   | Ok e ->
     Printf.printf
       "Success: %s\n"
-      (Expr.to_string (if testing () then Ast_util.Expr.to_debruijn e else e))
+      (Ast.Expr.to_string (if Flags.testing () then Ast_util.Expr.to_debruijn e else e))
   | Error s -> Printf.printf "Error: %s\n" s
 ;;
 
@@ -42,9 +42,9 @@ let main () =
         flag "t" no_arg ~doc:"Print all outputs in format required for test harness"
       in
       fun () ->
-        set_verbose (verbose || extra_verbose);
-        set_extra_verbose extra_verbose;
-        set_testing testing;
+        Flags.set_verbose (verbose || extra_verbose);
+        Flags.set_extra_verbose extra_verbose;
+        Flags.set_testing testing;
         run filepath]
   |> Command_unix.run
 ;;
