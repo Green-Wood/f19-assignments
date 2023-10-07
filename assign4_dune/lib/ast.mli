@@ -44,7 +44,7 @@ module Expr : sig
     | Sub
     | Mul
     | Div
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp_of, sexp, compare, quickcheck]
 
   type relop =
     | Lt
