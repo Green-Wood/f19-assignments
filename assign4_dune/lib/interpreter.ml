@@ -35,7 +35,7 @@ let rec trystep (e : Expr.t) : outcome =
          | Expr.Div -> ( / )
        in
        Step (Expr.Num (f n1 n2))
-     | _ -> failwith "The operator for given binop is not [num]")
+     | _ -> failwith "The operator for given binop is not type [num]")
   (* Add more cases here! *)
   | _ ->
     raise
