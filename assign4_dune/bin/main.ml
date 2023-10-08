@@ -9,8 +9,7 @@ let interpret (expr : Ast.Expr.t) =
       "Expr: %s\n\n"
       (Ast.Expr.to_string
          (if Flags.testing () then Ast_util.Expr.to_debruijn expr else expr));
-  Typecheck.typecheck expr
-  >>= fun ty ->
+  let%bind.Result ty = Typecheck.typecheck expr in
   if Flags.verbose ()
   then
     Printf.printf

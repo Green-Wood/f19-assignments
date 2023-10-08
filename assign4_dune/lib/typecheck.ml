@@ -1,5 +1,4 @@
 open Core
-open Result.Monad_infix
 open Ast
 
 exception Unimplemented
@@ -10,11 +9,8 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
   match e with
   | Expr.Num _ -> Ok Type.Num
   | Expr.Binop { left; right; _ } ->
-    typecheck_expr ctx left
-    >>= fun tau_left ->
-    (* TODO replace >>= with let bind *)
-    typecheck_expr ctx right
-    >>= fun tau_right ->
+    let%bind.Result tau_left = typecheck_expr ctx left in
+    let%bind.Result tau_right = typecheck_expr ctx right in
     (match tau_left, tau_right with
      | Type.Num, Type.Num -> Ok Type.Num
      | _ ->
