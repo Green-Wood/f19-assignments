@@ -76,7 +76,8 @@ module Type = struct
     aux String.Map.empty tau
   ;;
 
-  let aequiv tau1 tau2 = [%compare.equal: t] (to_debruijn tau1) (to_debruijn tau2)
+  let compare tau1 tau2 = compare (to_debruijn tau1) (to_debruijn tau2)
+  let equal = [%compare.equal: t]
 end
 
 module Expr = struct
@@ -319,5 +320,6 @@ module Expr = struct
     aux String.Map.empty e
   ;;
 
-  let aequiv e1 e2 = [%compare.equal: t] (to_debruijn e1) (to_debruijn e2)
+  let compare e1 e2 = compare (to_debruijn e1) (to_debruijn e2)
+  let equal = [%compare.equal: t]
 end

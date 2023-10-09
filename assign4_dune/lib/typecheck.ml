@@ -54,7 +54,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     let%bind.Result tau_else = typecheck_expr ctx else_ in
     (match tau_cond with
      | Type.Bool ->
-       if Ast.Type.aequiv tau_then tau_else
+       if Ast.Type.equal tau_then tau_else
        then Ok tau_then
        else
          Error
@@ -76,7 +76,7 @@ let inline_tests () =
   let p_ex = Parser.parse_expr_exn in
   let p_ty = Parser.parse_type_exn in
   let e1 = p_ex "fun (x : num) -> x" in
-  let equal_type = Result.equal Type.aequiv String.equal in
+  let equal_type = [%equal: (Type.t, string) Result.t] in
   assert (equal_type (typecheck e1) (Ok (p_ty "num -> num")));
   let e2 = p_ex "fun (x : num) -> y" in
   assert (Result.is_error (typecheck e2));
