@@ -22,21 +22,21 @@ module Type = struct
 
   let inline_tests () =
     let p = Parser.parse_type_exn in
-    assert (aequiv (substitute "a" (p "num") (p "forall b . a")) (p "forall a . num"));
-    assert (aequiv (substitute "a" (p "b") (p "forall b . a")) (p "forall c . b"));
-    assert (not (aequiv (substitute "a" (p "b") (p "forall b . a")) (p "forall b . b")));
+    assert (equal (substitute "a" (p "num") (p "forall b . a")) (p "forall a . num"));
+    assert (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall c . b"));
+    assert (not (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall b . b")));
     assert (
-      aequiv
+      equal
         (substitute "a" (p "b") (p "forall b . forall b . a"))
         (p "forall q . forall c . b"));
     assert (
       not
-        (aequiv
+        (equal
            (substitute "a" (p "b") (p "forall b . forall b . a"))
            (p "forall a . forall b . a")));
-    assert (aequiv (p "forall a . a") (p "forall b . b"));
-    assert (not (aequiv (p "forall a . a") (p "forall b . num")));
-    assert (aequiv (p "forall a . forall b . a -> b") (p "forall x . forall y . x -> y"))
+    assert (equal (p "forall a . a") (p "forall b . b"));
+    assert (not (equal (p "forall a . a") (p "forall b . num")));
+    assert (equal (p "forall a . forall b . a -> b") (p "forall x . forall y . x -> y"))
   ;;
 
   (* Uncomment the line below when you want to run the inline tests. *)
@@ -85,18 +85,18 @@ module Expr = struct
   let inline_tests () =
     let p = Parser.parse_expr_exn in
     let t1 = p "(fun (x : num) -> x) y" in
-    assert (aequiv (substitute "x" (Num 0) t1) t1);
-    assert (aequiv (substitute "y" (Num 0) t1) (p "(fun (x : num) -> x) 0"));
+    assert (equal (substitute "x" (Num 0) t1) t1);
+    assert (equal (substitute "y" (Num 0) t1) (p "(fun (x : num) -> x) 0"));
     let t2 = p "x + (fun (x : num) -> y)" in
-    assert (aequiv (substitute "x" (Num 0) t2) (p "0 + (fun (x : num) -> y)"));
-    assert (aequiv (substitute "y" (Num 0) t2) (p "x + (fun (x : num) -> 0)"));
-    assert (aequiv (p "fun (x : num) -> x") (p "fun (y : num) -> y"));
+    assert (equal (substitute "x" (Num 0) t2) (p "0 + (fun (x : num) -> y)"));
+    assert (equal (substitute "y" (Num 0) t2) (p "x + (fun (x : num) -> 0)"));
+    assert (equal (p "fun (x : num) -> x") (p "fun (y : num) -> y"));
     assert (
       not
-        (aequiv
+        (equal
            (p "fun (x : num) -> fun (x : num) -> x + x")
            (p "fun (x : num) -> fun (y : num) -> y + x")));
-    assert (aequiv (p "tyfun a -> fun (x : a) -> x") (p "tyfun b -> fun (x : b) -> x"));
+    assert (equal (p "tyfun a -> fun (x : a) -> x") (p "tyfun b -> fun (x : b) -> x"));
     ()
   ;;
 
