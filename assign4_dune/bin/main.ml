@@ -7,14 +7,13 @@ let interpret (expr : Ast.Expr.t) =
   then
     Printf.printf
       "Expr: %s\n\n"
-      (Ast.Expr.to_string
-         (if Flags.testing () then Ast_util.Expr.to_debruijn expr else expr));
+      (Ast.Expr.to_string (if Flags.testing () then Ast.Expr.to_debruijn expr else expr));
   let%bind.Result ty = Typecheck.typecheck expr in
   if Flags.verbose ()
   then
     Printf.printf
       "Type: %s\n\n"
-      (Ast.Type.to_string (if Flags.testing () then Ast_util.Type.to_debruijn ty else ty));
+      (Ast.Type.to_string (if Flags.testing () then Ast.Type.to_debruijn ty else ty));
   Interpreter.eval expr
 ;;
 
@@ -25,7 +24,7 @@ let run (filepath : string) =
   | Ok e ->
     Printf.printf
       "Success: %s\n"
-      (Ast.Expr.to_string (if Flags.testing () then Ast_util.Expr.to_debruijn e else e))
+      (Ast.Expr.to_string (if Flags.testing () then Ast.Expr.to_debruijn e else e))
   | Error s -> Printf.printf "Error: %s\n" s
 ;;
 

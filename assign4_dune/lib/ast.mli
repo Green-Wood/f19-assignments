@@ -1,6 +1,6 @@
 open! Core
 
-type variable = string [@@deriving sexp_of, sexp, compare]
+type variable = string [@@deriving sexp_of, sexp]
 
 module Type : sig
   type t =
@@ -36,6 +36,9 @@ module Type : sig
 
   val to_string : t -> string
   val to_string_sexp : t -> string
+  val substitute : string -> t -> t -> t
+  val to_debruijn : t -> t
+  val aequiv : t -> t -> bool
 end
 
 module Expr : sig
@@ -147,4 +150,7 @@ module Expr : sig
   [@@deriving variants, sexp_of, sexp, compare]
 
   val to_string : t -> string
+  val substitute : string -> t -> t -> t
+  val to_debruijn : t -> t
+  val aequiv : t -> t -> bool
 end

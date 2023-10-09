@@ -2,6 +2,8 @@ open Core
 
 type variable = string [@@deriving sexp_of, sexp, compare]
 
+let fresh s = s ^ "'"
+
 module Type = struct
   type t =
     | Num
@@ -33,6 +35,7 @@ module Type = struct
         ; tau : t
         }
   [@@deriving variants, sexp_of, sexp, compare]
+  (* TODO remove variants and sexp_of *)
 
   let rec to_string ty =
     match ty with
@@ -50,6 +53,31 @@ module Type = struct
   ;;
 
   let to_string_sexp ty = Sexp.to_string_hum (sexp_of_t ty)
+
+  let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
+    match tau with
+    | Num -> Num
+    | Bool -> Bool
+    (* Add more cases here! *)
+    | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
+  ;;
+
+  let substitute (x : string) (tau' : t) (tau : t) : t =
+    substitute_map (String.Map.singleton x tau') tau
+  ;;
+
+  let rec to_debruijn (tau : t) : t =
+    let rec aux (depth : int String.Map.t) (tau : t) : t =
+      match tau with
+      | Num -> Num
+      | Bool -> Bool
+      (* Add more cases here! *)
+      | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
+    in
+    aux String.Map.empty tau
+  ;;
+
+  let aequiv tau1 tau2 = [%compare.equal: t] (to_debruijn tau1) (to_debruijn tau2)
 end
 
 module Expr = struct
@@ -100,7 +128,7 @@ module Expr = struct
         }
     | Var of variable
     | Lam of
-        { x : variable
+        { x : variable (* TODO: May need to ignore for comparison *)
         ; tau : Type.t
         ; e : t
         }
@@ -242,4 +270,55 @@ module Expr = struct
   ;;
 
   let to_string_sexp e = Sexp.to_string_hum (sexp_of_t e)
+
+  let rec substitute_map (rename : t String.Map.t) (e : t) : t =
+    match e with
+    | Num _ -> e
+    | Binop { binop; left; right } ->
+      Binop
+        { binop; left = substitute_map rename left; right = substitute_map rename right }
+    | True -> True
+    | False -> False
+    | Relop { relop; left; right } ->
+      Relop
+        { relop; left = substitute_map rename left; right = substitute_map rename right }
+    | And { left; right } ->
+      And { left = substitute_map rename left; right = substitute_map rename right }
+    | Or { left; right } ->
+      Or { left = substitute_map rename left; right = substitute_map rename right }
+    | If { cond; then_; else_ } ->
+      If
+        { cond = substitute_map rename cond
+        ; then_ = substitute_map rename then_
+        ; else_ = substitute_map rename else_
+        }
+    (* Put more cases here! *)
+    | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
+  ;;
+
+  let substitute (x : string) (e' : t) (e : t) : t =
+    substitute_map (String.Map.singleton x e') e
+  ;;
+
+  let rec to_debruijn (e : t) : t =
+    let rec aux (depth : int String.Map.t) (e : t) : t =
+      match e with
+      | Num _ -> e
+      | Binop { binop; left; right } ->
+        Binop { binop; left = aux depth left; right = aux depth right }
+      | True -> True
+      | False -> False
+      | Relop { relop; left; right } ->
+        Relop { relop; left = aux depth left; right = aux depth right }
+      | And { left; right } -> And { left = aux depth left; right = aux depth right }
+      | Or { left; right } -> Or { left = aux depth left; right = aux depth right }
+      | If { cond; then_; else_ } ->
+        If { cond = aux depth cond; then_ = aux depth then_; else_ = aux depth else_ }
+      (* Add more cases here! *)
+      | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
+    in
+    aux String.Map.empty e
+  ;;
+
+  let aequiv e1 e2 = [%compare.equal: t] (to_debruijn e1) (to_debruijn e2)
 end

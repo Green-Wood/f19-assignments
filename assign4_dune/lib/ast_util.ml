@@ -1,34 +1,7 @@
 open Core
 
-exception Unimplemented
-
-let fresh s = s ^ "'"
-
 module Type = struct
   open Ast.Type
-
-  let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
-    match tau with
-    | Num -> Num
-    | Bool -> Bool
-    (* Add more cases here! *)
-    | _ -> raise Unimplemented
-  ;;
-
-  let substitute (x : string) (tau' : t) (tau : t) : t =
-    substitute_map (String.Map.singleton x tau') tau
-  ;;
-
-  let rec to_debruijn (tau : t) : t =
-    let rec aux (depth : int String.Map.t) (tau : t) : t =
-      match tau with
-      | Num -> Num
-      | Bool -> Bool
-      (* Add more cases here! *)
-      | _ -> raise Unimplemented
-    in
-    aux String.Map.empty tau
-  ;;
 
   let rec aequiv (tau1 : t) (tau2 : t) : bool =
     let rec aux (tau1 : t) (tau2 : t) : bool =
@@ -73,68 +46,19 @@ end
 module Expr = struct
   open Ast.Expr
 
-  let rec substitute_map (rename : t String.Map.t) (e : t) : t =
-    match e with
-    | Num _ -> e
-    | Binop { binop; left; right } ->
-      Binop
-        { binop; left = substitute_map rename left; right = substitute_map rename right }
-    | True -> True
-    | False -> False
-    | Relop { relop; left; right } ->
-      Relop
-        { relop; left = substitute_map rename left; right = substitute_map rename right }
-    | And { left; right } ->
-      And { left = substitute_map rename left; right = substitute_map rename right }
-    | Or { left; right } ->
-      Or { left = substitute_map rename left; right = substitute_map rename right }
-    | If { cond; then_; else_ } ->
-      If
-        { cond = substitute_map rename cond
-        ; then_ = substitute_map rename then_
-        ; else_ = substitute_map rename else_
-        }
-    (* Put more cases here! *)
-    | _ -> raise Unimplemented
-  ;;
-
-  let substitute (x : string) (e' : t) (e : t) : t =
-    substitute_map (String.Map.singleton x e') e
-  ;;
-
-  let rec to_debruijn (e : t) : t =
-    let rec aux (depth : int String.Map.t) (e : t) : t =
-      match e with
-      | Num _ -> e
-      | Binop { binop; left; right } ->
-        Binop { binop; left = aux depth left; right = aux depth right }
-      | True -> True
-      | False -> False
-      | Relop { relop; left; right } ->
-        Relop { relop; left = aux depth left; right = aux depth right }
-      | And { left; right } -> And { left = aux depth left; right = aux depth right }
-      | Or { left; right } -> Or { left = aux depth left; right = aux depth right }
-      | If { cond; then_; else_ } ->
-        If { cond = aux depth cond; then_ = aux depth then_; else_ = aux depth else_ }
-      (* Add more cases here! *)
-      | _ -> raise Unimplemented
-    in
-    aux String.Map.empty e
-  ;;
-
   let aequiv (e1 : t) (e2 : t) : bool =
     let rec aux (e1 : t) (e2 : t) : bool =
       match e1, e2 with
       | Num n1, Num n2 -> n1 = n2
       | Var x, Var y -> String.equal x y
       | Binop l, Binop r ->
-        [%compare.equal: Ast.Expr.binop] l.binop r.binop
+        [%compare.equal: binop] l.binop r.binop
         && aux l.left r.left
         && aux l.right r.right
       | True, True | False, False -> true
       | If l, If r -> aux l.cond r.cond && aux l.then_ r.then_ && aux l.else_ r.else_
       | Relop l, Relop r ->
-        [%compare.equal: Ast.Expr.relop] l.relop r.relop
+        [%compare.equal: relop] l.relop r.relop
         && aux l.left r.left
         && aux l.right r.right
       | And l, And r -> aux l.left r.left && aux l.right r.right
@@ -143,9 +67,8 @@ module Expr = struct
       | App l, App r -> aux l.lam r.lam && aux l.arg r.arg
       | Unit, Unit -> true
       | Pair l, Pair r -> aux l.left r.left && aux l.right r.right
-      | Project l, Project r ->
-        aux l.e r.e && [%compare.equal: Ast.Expr.direction] l.d r.d
-      | Inject l, Inject r -> aux l.e r.e && [%compare.equal: Ast.Expr.direction] l.d r.d
+      | Project l, Project r -> aux l.e r.e && [%compare.equal: direction] l.d r.d
+      | Inject l, Inject r -> aux l.e r.e && [%compare.equal: direction] l.d r.d
       | Case l, Case r -> aux l.e r.e && aux l.eleft r.eleft && aux l.eright r.eright
       | Fix l, Fix r -> aux l.e r.e
       | TyLam l, TyLam r -> aux l.e r.e

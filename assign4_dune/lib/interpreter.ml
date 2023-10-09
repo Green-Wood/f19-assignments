@@ -4,7 +4,6 @@ open Ast
 type outcome =
   | Step of Expr.t
   | Val
-[@@deriving compare]
 
 exception RuntimeError of string
 
@@ -110,15 +109,3 @@ let rec eval e =
     eval e'
   | Val -> Ok e
 ;;
-
-let inline_tests () =
-  let p = Parser.parse_expr_exn in
-  let e1 = p "2 + 3" in
-  assert ([%compare.equal: outcome] (trystep e1) (Step (Expr.Num 5)));
-  let e2 = p "(fun (x : num) -> x) 3" in
-  assert ([%compare.equal: outcome] (trystep e2) (Step (Expr.Num 3)))
-;;
-
-(* Uncomment the line below when you want to run the inline tests. *)
-(* TODO move to test *)
-(* let () = inline_tests () *)
