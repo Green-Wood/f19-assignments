@@ -1,6 +1,6 @@
 open Core
 
-type variable = string [@@deriving sexp_of, sexp, compare]
+type variable = string [@@deriving sexp, compare]
 
 let fresh s = s ^ "'"
 
@@ -34,8 +34,7 @@ module Type = struct
         { a : variable
         ; tau : t
         }
-  [@@deriving variants, sexp_of, sexp, compare]
-  (* TODO remove variants and sexp_of *)
+  [@@deriving variants, sexp, compare]
 
   let rec to_string ty =
     match ty with
@@ -86,18 +85,18 @@ module Expr = struct
     | Sub
     | Mul
     | Div
-  [@@deriving variants, sexp_of, sexp, compare, quickcheck]
+  [@@deriving variants, sexp, compare, quickcheck]
 
   type relop =
     | Lt
     | Gt
     | Eq
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   type direction =
     | Left
     | Right
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   type t =
     | Num of int
@@ -186,7 +185,7 @@ module Expr = struct
         ; e_mod : t
         ; e_body : t
         }
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   let rec to_string e =
     match e with

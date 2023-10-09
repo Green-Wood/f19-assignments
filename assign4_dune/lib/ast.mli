@@ -1,6 +1,6 @@
 open! Core
 
-type variable = string [@@deriving sexp_of, sexp]
+type variable = string
 
 module Type : sig
   type t =
@@ -32,7 +32,7 @@ module Type : sig
         { a : variable
         ; tau : t
         }
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   val to_string : t -> string
   val to_string_sexp : t -> string
@@ -47,18 +47,18 @@ module Expr : sig
     | Sub
     | Mul
     | Div
-  [@@deriving variants, sexp_of, sexp, compare, quickcheck]
+  [@@deriving variants, sexp, compare, quickcheck]
 
   type relop =
     | Lt
     | Gt
     | Eq
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   type direction =
     | Left
     | Right
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   type t =
     | Num of int
@@ -147,7 +147,7 @@ module Expr : sig
         ; e_mod : t
         ; e_body : t
         }
-  [@@deriving variants, sexp_of, sexp, compare]
+  [@@deriving variants, sexp, compare]
 
   val to_string : t -> string
   val substitute : string -> t -> t -> t
