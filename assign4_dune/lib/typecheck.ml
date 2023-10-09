@@ -15,12 +15,19 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
      | Type.Num, Type.Num -> Ok Type.Num
      | _ ->
        Error
-         (Printf.sprintf
-            "Binary operands have incompatible types: (%s : %s) and (%s : %s)"
-            (Expr.to_string left)
-            (Type.to_string tau_left)
-            (Expr.to_string right)
-            (Type.to_string tau_right)))
+         [%string
+           "Binary operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) \
+            and (%{right#Expr} : %{tau_right#Type})"])
+  | Expr.Relop { left; right; _ } ->
+    let%bind.Result tau_left = typecheck_expr ctx left in
+    let%bind.Result tau_right = typecheck_expr ctx right in
+    (match tau_left, tau_right with
+     | Type.Num, Type.Num -> Ok Type.Bool
+     | _ ->
+       Error
+         [%string
+           "Relation operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) \
+            and (%{right#Expr} : %{tau_right#Type})"])
   (* Add more cases here! *)
   | _ -> raise Unimplemented
 ;;

@@ -35,7 +35,23 @@ let rec trystep (e : Expr.t) : outcome =
          | Expr.Div -> ( / )
        in
        Step (Expr.Num (f n1 n2))
-     | _ -> failwith "The operator for given binop is not type [num]")
+     | _ -> failwith "The oprands for given binop is not type [num]")
+  | Expr.Relop { relop; left; right } ->
+    (left, fun left' -> Expr.Relop { left = left'; relop; right })
+    |-> fun () ->
+    (right, fun right' -> Expr.Relop { right = right'; relop; left })
+    |-> fun () ->
+    (match left, right with
+     | Expr.Num n1, Expr.Num n2 ->
+       let f =
+         match relop with
+         | Expr.Lt -> ( < )
+         | Expr.Gt -> ( > )
+         | Expr.Eq -> ( = )
+       in
+       let result = if f n1 n2 then Expr.True else Expr.False in
+       Step result
+     | _ -> failwith "The oprands for given relop is not type [num]")
   (* Add more cases here! *)
   | _ ->
     raise

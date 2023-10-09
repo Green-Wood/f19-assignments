@@ -2,11 +2,7 @@ open Core
 open Lam
 
 let%expect_test "test_add" =
-  let expr = Parser.parse_expr_exn "(1 + 2) / 3 * 4 - 2" in
-  print_s [%message (Typecheck.typecheck expr : (Ast.Type.t, string) Result.t)];
-  [%expect {| ("Typecheck.typecheck expr" (Ok Num)) |}];
-  print_s [%message (Interpreter.eval expr : (Ast.Expr.t, string) Result.t)];
-  [%expect {| ("Interpreter.eval expr" (Ok (Num 2))) |}]
+  Test_util.check_expr "(1 + 2) / 3 * 4 - 2" Ast.Type.Num (Ast.Expr.Num 2)
 ;;
 
 module Binops_expr = struct
@@ -53,12 +49,8 @@ let%expect_test "quickcheck" =
     ~f:(fun t ->
       let str = Binops_expr.to_string t in
       try
-        let target = Binops_expr.eval t |> Ast.Expr.Num |> Ok in
-        let expr = Parser.parse_expr_exn str in
-        [%test_eq: (Ast.Type.t, string) Result.t]
-          (Typecheck.typecheck expr)
-          (Ok Ast.Type.Num);
-        [%test_eq: (Ast.Expr.t, string) Result.t] (Interpreter.eval expr) target
+        let target = Binops_expr.eval t |> Ast.Expr.Num in
+        Test_util.check_expr str Ast.Type.Num target
       with
       | Division_by_zero -> ())
 ;;

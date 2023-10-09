@@ -10,6 +10,7 @@ module Type = struct
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
     match tau with
     | Num -> Num
+    | Bool -> Bool
     (* Add more cases here! *)
     | _ -> raise Unimplemented
   ;;
@@ -22,6 +23,7 @@ module Type = struct
     let rec aux (depth : int String.Map.t) (tau : t) : t =
       match tau with
       | Num -> Num
+      | Bool -> Bool
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
@@ -77,6 +79,11 @@ module Expr = struct
     | Binop { binop; left; right } ->
       Binop
         { binop; left = substitute_map rename left; right = substitute_map rename right }
+    | True -> True
+    | False -> False
+    | Relop { relop; left; right } ->
+      Relop
+        { relop; left = substitute_map rename left; right = substitute_map rename right }
     (* Put more cases here! *)
     | _ -> raise Unimplemented
   ;;
@@ -91,6 +98,10 @@ module Expr = struct
       | Num _ -> e
       | Binop { binop; left; right } ->
         Binop { binop; left = aux depth left; right = aux depth right }
+      | True -> True
+      | False -> False
+      | Relop { relop; left; right } ->
+        Relop { relop; left = aux depth left; right = aux depth right }
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
