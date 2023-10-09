@@ -1,8 +1,6 @@
 open Core
 open Ast
 
-exception Unimplemented
-
 let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
   : (Type.t, string) Result.t
   =
@@ -28,8 +26,30 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
          [%string
            "Relation operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) \
             and (%{right#Expr} : %{tau_right#Type})"])
+  | Expr.True -> Ok Type.Bool
+  | Expr.False -> Ok Type.Bool
+  | Expr.And { left; right } ->
+    let%bind.Result tau_left = typecheck_expr ctx left in
+    let%bind.Result tau_right = typecheck_expr ctx right in
+    (match tau_left, tau_right with
+     | Type.Bool, Type.Bool -> Ok Type.Bool
+     | _ ->
+       Error
+         [%string
+           "AND operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) and \
+            (%{right#Expr} : %{tau_right#Type})"])
+  | Expr.Or { left; right } ->
+    let%bind.Result tau_left = typecheck_expr ctx left in
+    let%bind.Result tau_right = typecheck_expr ctx right in
+    (match tau_left, tau_right with
+     | Type.Bool, Type.Bool -> Ok Type.Bool
+     | _ ->
+       Error
+         [%string
+           "OR operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) and \
+            (%{right#Expr} : %{tau_right#Type})"])
   (* Add more cases here! *)
-  | _ -> raise Unimplemented
+  | _ -> failwith [%string "Unimplemented typecheck for expr: %{e#Expr}"]
 ;;
 
 let typecheck t = typecheck_expr String.Map.empty t

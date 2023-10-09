@@ -25,33 +25,64 @@ let rec trystep (e : Expr.t) : outcome =
     |-> fun () ->
     (right, fun right' -> Expr.Binop { right = right'; binop; left })
     |-> fun () ->
-    (match left, right with
-     | Expr.Num n1, Expr.Num n2 ->
-       let f =
-         match binop with
-         | Expr.Add -> ( + )
-         | Expr.Sub -> ( - )
-         | Expr.Mul -> ( * )
-         | Expr.Div -> ( / )
-       in
-       Step (Expr.Num (f n1 n2))
-     | _ -> failwith "The oprands for given binop is not type [num]")
+    let n1, n2 =
+      match left, right with
+      | Expr.Num n1, Expr.Num n2 -> n1, n2
+      | _ -> failwith "The oprands for given binop is not type [num]"
+    in
+    let f =
+      match binop with
+      | Expr.Add -> ( + )
+      | Expr.Sub -> ( - )
+      | Expr.Mul -> ( * )
+      | Expr.Div -> ( / )
+    in
+    Step (Expr.Num (f n1 n2))
   | Expr.Relop { relop; left; right } ->
     (left, fun left' -> Expr.Relop { left = left'; relop; right })
     |-> fun () ->
     (right, fun right' -> Expr.Relop { right = right'; relop; left })
     |-> fun () ->
-    (match left, right with
-     | Expr.Num n1, Expr.Num n2 ->
-       let f =
-         match relop with
-         | Expr.Lt -> ( < )
-         | Expr.Gt -> ( > )
-         | Expr.Eq -> ( = )
-       in
-       let result = if f n1 n2 then Expr.True else Expr.False in
-       Step result
-     | _ -> failwith "The oprands for given relop is not type [num]")
+    let n1, n2 =
+      match left, right with
+      | Expr.Num n1, Expr.Num n2 -> n1, n2
+      | _ -> failwith "The oprands for given relop is not type [num]"
+    in
+    let f =
+      match relop with
+      | Expr.Lt -> ( < )
+      | Expr.Gt -> ( > )
+      | Expr.Eq -> ( = )
+    in
+    Step (if f n1 n2 then Expr.True else Expr.False)
+  | Expr.And { left; right } ->
+    (left, fun left' -> Expr.And { left = left'; right })
+    |-> fun () ->
+    (right, fun right' -> Expr.And { right = right'; left })
+    |-> fun () ->
+    let result =
+      match left, right with
+      | Expr.True, Expr.True -> Expr.True
+      | Expr.False, Expr.True -> Expr.False
+      | Expr.True, Expr.False -> Expr.False
+      | Expr.False, Expr.False -> Expr.False
+      | _ -> failwith "The oprands for AND is not type [Bool]"
+    in
+    Step result
+  | Expr.Or { left; right } ->
+    (left, fun left' -> Expr.Or { left = left'; right })
+    |-> fun () ->
+    (right, fun right' -> Expr.Or { right = right'; left })
+    |-> fun () ->
+    let result =
+      match left, right with
+      | Expr.True, Expr.True -> Expr.True
+      | Expr.False, Expr.True -> Expr.True
+      | Expr.True, Expr.False -> Expr.True
+      | Expr.False, Expr.False -> Expr.False
+      | _ -> failwith "The oprands for OR is not type [Bool]"
+    in
+    Step result
   (* Add more cases here! *)
   | _ ->
     raise
