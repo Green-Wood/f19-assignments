@@ -48,6 +48,24 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
          [%string
            "OR operands have incompatible types: (%{left#Expr} : %{tau_left#Type}) and \
             (%{right#Expr} : %{tau_right#Type})"])
+  | Expr.If { cond; then_; else_ } ->
+    let%bind.Result tau_cond = typecheck_expr ctx cond in
+    let%bind.Result tau_then = typecheck_expr ctx then_ in
+    let%bind.Result tau_else = typecheck_expr ctx else_ in
+    (match tau_cond with
+     | Type.Bool ->
+       if [%compare.equal: Type.t] tau_then tau_else
+       then Ok tau_then
+       else
+         Error
+           [%string
+             "The type of [then] and [else] is incompatible: (%{then_#Expr} : \
+              %{tau_then#Type}) and (%{else_#Expr} : %{tau_else#Type})"]
+     | _ ->
+       Error
+         [%string
+           "The condition of if-else should be of type [Bool] but got: (%{cond#Expr} : \
+            %{tau_cond#Type})"])
   (* Add more cases here! *)
   | _ -> failwith [%string "Unimplemented typecheck for expr: %{e#Expr}"]
 ;;

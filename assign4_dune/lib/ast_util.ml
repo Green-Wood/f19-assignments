@@ -88,6 +88,12 @@ module Expr = struct
       And { left = substitute_map rename left; right = substitute_map rename right }
     | Or { left; right } ->
       Or { left = substitute_map rename left; right = substitute_map rename right }
+    | If { cond; then_; else_ } ->
+      If
+        { cond = substitute_map rename cond
+        ; then_ = substitute_map rename then_
+        ; else_ = substitute_map rename else_
+        }
     (* Put more cases here! *)
     | _ -> raise Unimplemented
   ;;
@@ -108,6 +114,8 @@ module Expr = struct
         Relop { relop; left = aux depth left; right = aux depth right }
       | And { left; right } -> And { left = aux depth left; right = aux depth right }
       | Or { left; right } -> Or { left = aux depth left; right = aux depth right }
+      | If { cond; then_; else_ } ->
+        If { cond = aux depth cond; then_ = aux depth then_; else_ = aux depth else_ }
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in

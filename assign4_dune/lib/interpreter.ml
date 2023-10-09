@@ -83,6 +83,13 @@ let rec trystep (e : Expr.t) : outcome =
       | _ -> failwith "The oprands for OR is not type [Bool]"
     in
     Step result
+  | Expr.If { cond; then_; else_ } ->
+    (cond, fun cond' -> Expr.If { cond = cond'; then_; else_ })
+    |-> fun () ->
+    (match cond with
+     | Expr.True -> Step then_
+     | Expr.False -> Step else_
+     | _ -> failwith "The type of cond in if-else is not type [Bool]")
   (* Add more cases here! *)
   | _ ->
     raise
