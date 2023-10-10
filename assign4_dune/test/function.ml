@@ -81,5 +81,16 @@ let%expect_test "function eval" =
     n
     |}
     Ast.Type.Bool
-    Ast.Expr.True
+    Ast.Expr.True;
+  Test_util.check_type_eval
+    {|
+    let n : num = 0 in
+    let x : num = 
+      let n : num = n + 1 in
+      n * 3
+    in
+    n
+    |}
+    Ast.Type.Num
+    (Ast.Expr.Num 0)
 ;;
