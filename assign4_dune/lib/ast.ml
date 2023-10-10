@@ -59,6 +59,9 @@ module Type = struct
     | Bool -> Bool
     | Fn { arg; ret } ->
       Fn { arg = substitute_map rename arg; ret = substitute_map rename ret }
+    | Unit -> Unit
+    | Product { left; right } ->
+      Product { left = substitute_map rename left; right = substitute_map rename right }
     (* Add more cases here! *)
     | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
   ;;
@@ -73,6 +76,9 @@ module Type = struct
       | Num -> Num
       | Bool -> Bool
       | Fn { arg; ret } -> Fn { arg = aux depth arg; ret = aux depth ret }
+      | Unit -> Unit
+      | Product { left; right } ->
+        Product { left = aux depth left; right = aux depth right }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
     in
@@ -302,6 +308,10 @@ module Expr = struct
       Lam { x = fresh_x; tau; e = substitute_map rename e }
     | App { lam; arg } ->
       App { lam = substitute_map rename lam; arg = substitute_map rename arg }
+    | Unit -> Unit
+    | Pair { left; right } ->
+      Pair { left = substitute_map rename left; right = substitute_map rename right }
+    | Project { e; d } -> Project { e = substitute_map rename e; d }
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
@@ -329,6 +339,9 @@ module Expr = struct
         let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:x ~data:0 in
         Lam { x = "_"; tau; e = aux depth e }
       | App { lam; arg } -> App { lam = aux depth lam; arg = aux depth arg }
+      | Unit -> Unit
+      | Pair { left; right } -> Pair { left = aux depth left; right = aux depth right }
+      | Project { e; d } -> Project { e = aux depth e; d }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in

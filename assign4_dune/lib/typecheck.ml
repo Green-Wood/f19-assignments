@@ -91,6 +91,22 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
          [%string
            "The type of lambda should be a function, but got: (%{lam#Expr} : \
             (%{tau_lam#Type}))"])
+  | Expr.Unit -> Ok Type.Unit
+  | Expr.Pair { left; right } ->
+    let%bind.Result tau_left = typecheck_expr ctx left in
+    let%map.Result tau_right = typecheck_expr ctx right in
+    Type.Product { left = tau_left; right = tau_right }
+  | Expr.Project { e; d } ->
+    let%bind.Result tau = typecheck_expr ctx e in
+    (match tau with
+     | Type.Product { left; right } ->
+       (match d with
+        | Expr.Left -> Ok left
+        | Expr.Right -> Ok right)
+     | _ ->
+       Error
+         [%string
+           "The type of project should be a [Product], but got: (%{e#Expr} : %{tau#Type})"])
   (* Add more cases here! *)
   | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
 ;;

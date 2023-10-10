@@ -97,6 +97,15 @@ let rec trystep (e : Expr.t) : outcome =
     (match lam with
      | Expr.Lam { x; tau; e } -> Step (Expr.substitute x ~e':arg ~e)
      | _ -> failwith "The type of lam is not type [Fn]")
+  | Expr.Project { e; d } ->
+    (e, fun e' -> Expr.Project { e = e'; d })
+    |-> fun () ->
+    (match e with
+     | Expr.Pair { left; right } ->
+       (match d with
+        | Expr.Left -> Step left
+        | Expr.Right -> Step right)
+     | _ -> failwith "Type type of project is not type [Pair]")
   (* Add more cases here! *)
   | Expr.Var _ | _ ->
     raise

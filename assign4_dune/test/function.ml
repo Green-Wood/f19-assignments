@@ -65,6 +65,13 @@ let%expect_test "function eval" =
     (Ast.Expr.Num 4);
   Test_util.check_type_eval
     {|
+    let f : num -> num -> num = fun (x : num) -> fun (x : num) -> x in
+    (f 0) 1
+    |}
+    Ast.Type.Num
+    (Ast.Expr.Num 1);
+  Test_util.check_type_eval
+    {|
     let n : num = 1 + 2 in
     let n : num = n + 1 in
     let n : num = -100 in
