@@ -57,11 +57,13 @@ module Type = struct
     match tau with
     | Num -> Num
     | Bool -> Bool
+    | Fn { arg; ret } ->
+      Fn { arg = substitute_map rename arg; ret = substitute_map rename ret }
     (* Add more cases here! *)
     | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
   ;;
 
-  let substitute (x : string) (tau' : t) (tau : t) : t =
+  let substitute (x : string) ~(tau' : t) ~(tau : t) : t =
     substitute_map (String.Map.singleton x tau') tau
   ;;
 
@@ -70,6 +72,7 @@ module Type = struct
       match tau with
       | Num -> Num
       | Bool -> Bool
+      | Fn { arg; ret } -> Fn { arg = aux depth arg; ret = aux depth ret }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
     in
@@ -292,11 +295,18 @@ module Expr = struct
         ; then_ = substitute_map rename then_
         ; else_ = substitute_map rename else_
         }
+    | Var x -> Map.find rename x |> Option.value ~default:(Var x)
+    | Lam { x; tau; e } ->
+      let fresh_x = fresh x in
+      let rename = Map.set rename ~key:x ~data:(Var fresh_x) in
+      Lam { x = fresh_x; tau; e = substitute_map rename e }
+    | App { lam; arg } ->
+      App { lam = substitute_map rename lam; arg = substitute_map rename arg }
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
 
-  let substitute (x : string) (e' : t) (e : t) : t =
+  let substitute (x : string) ~(e' : t) ~(e : t) : t =
     substitute_map (String.Map.singleton x e') e
   ;;
 
@@ -314,6 +324,11 @@ module Expr = struct
       | Or { left; right } -> Or { left = aux depth left; right = aux depth right }
       | If { cond; then_; else_ } ->
         If { cond = aux depth cond; then_ = aux depth then_; else_ = aux depth else_ }
+      | Var x -> Map.find depth x |> Option.value_map ~default:x ~f:Int.to_string |> Var
+      | Lam { x; tau; e } ->
+        let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:x ~data:0 in
+        Lam { x = "_"; tau; e = aux depth e }
+      | App { lam; arg } -> App { lam = aux depth lam; arg = aux depth arg }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in

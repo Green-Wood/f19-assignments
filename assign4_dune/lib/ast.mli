@@ -36,7 +36,7 @@ module Type : sig
 
   val to_string : t -> string
   val to_string_sexp : t -> string
-  val substitute : string -> t -> t -> t
+  val substitute : string -> tau':t -> tau:t -> t
   val to_debruijn : t -> t
 end
 
@@ -149,6 +149,6 @@ module Expr : sig
   [@@deriving variants, sexp, compare, equal]
 
   val to_string : t -> string
-  val substitute : string -> t -> t -> t
+  val substitute : string -> e':t -> e:t -> t
   val to_debruijn : t -> t
 end

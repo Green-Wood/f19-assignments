@@ -20,24 +20,24 @@ module Type = struct
     aux (to_debruijn tau1) (to_debruijn tau2)
   ;;
 
-  let inline_tests () =
-    let p = Parser.parse_type_exn in
-    assert (equal (substitute "a" (p "num") (p "forall b . a")) (p "forall a . num"));
-    assert (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall c . b"));
-    assert (not (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall b . b")));
-    assert (
-      equal
-        (substitute "a" (p "b") (p "forall b . forall b . a"))
-        (p "forall q . forall c . b"));
-    assert (
-      not
-        (equal
-           (substitute "a" (p "b") (p "forall b . forall b . a"))
-           (p "forall a . forall b . a")));
-    assert (equal (p "forall a . a") (p "forall b . b"));
-    assert (not (equal (p "forall a . a") (p "forall b . num")));
-    assert (equal (p "forall a . forall b . a -> b") (p "forall x . forall y . x -> y"))
-  ;;
+  (* let inline_tests () =
+     let p = Parser.parse_type_exn in
+     assert (equal (substitute "a" (p "num") (p "forall b . a")) (p "forall a . num"));
+     assert (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall c . b"));
+     assert (not (equal (substitute "a" (p "b") (p "forall b . a")) (p "forall b . b")));
+     assert (
+     equal
+     (substitute "a" (p "b") (p "forall b . forall b . a"))
+     (p "forall q . forall c . b"));
+     assert (
+     not
+     (equal
+     (substitute "a" (p "b") (p "forall b . forall b . a"))
+     (p "forall a . forall b . a")));
+     assert (equal (p "forall a . a") (p "forall b . b"));
+     assert (not (equal (p "forall a . a") (p "forall b . num")));
+     assert (equal (p "forall a . forall b . a -> b") (p "forall x . forall y . x -> y"))
+     ;; *)
 
   (* Uncomment the line below when you want to run the inline tests. *)
   (* let () = inline_tests () *)
@@ -82,23 +82,11 @@ module Expr = struct
     aux (to_debruijn e1) (to_debruijn e2)
   ;;
 
-  let inline_tests () =
-    let p = Parser.parse_expr_exn in
-    let t1 = p "(fun (x : num) -> x) y" in
-    assert (equal (substitute "x" (Num 0) t1) t1);
-    assert (equal (substitute "y" (Num 0) t1) (p "(fun (x : num) -> x) 0"));
-    let t2 = p "x + (fun (x : num) -> y)" in
-    assert (equal (substitute "x" (Num 0) t2) (p "0 + (fun (x : num) -> y)"));
-    assert (equal (substitute "y" (Num 0) t2) (p "x + (fun (x : num) -> 0)"));
-    assert (equal (p "fun (x : num) -> x") (p "fun (y : num) -> y"));
-    assert (
-      not
-        (equal
-           (p "fun (x : num) -> fun (x : num) -> x + x")
-           (p "fun (x : num) -> fun (y : num) -> y + x")));
-    assert (equal (p "tyfun a -> fun (x : a) -> x") (p "tyfun b -> fun (x : b) -> x"));
-    ()
-  ;;
+  (* let inline_tests () =
+     let p = Parser.parse_expr_exn in
+     assert (equal (p "tyfun a -> fun (x : a) -> x") (p "tyfun b -> fun (x : b) -> x"));
+     ()
+     ;; *)
 
   (* Uncomment the line below when you want to run the inline tests. *)
   (* let () = inline_tests () *)

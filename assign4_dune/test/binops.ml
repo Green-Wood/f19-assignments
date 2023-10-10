@@ -2,7 +2,7 @@ open Core
 open Lam
 
 let%expect_test "test_add" =
-  Test_util.check_expr "(1 + 2) / 3 * 4 - 2" Ast.Type.Num (Ast.Expr.Num 2)
+  Test_util.check_type_eval "(1 + 2) / 3 * 4 - 2" Ast.Type.Num (Ast.Expr.Num 2)
 ;;
 
 module Binops_expr = struct
@@ -50,7 +50,7 @@ let%expect_test "quickcheck" =
       let str = Binops_expr.to_string t in
       try
         let target = Binops_expr.eval t |> Ast.Expr.Num in
-        Test_util.check_expr str Ast.Type.Num target
+        Test_util.check_type_eval str Ast.Type.Num target
       with
       | Division_by_zero -> ())
 ;;

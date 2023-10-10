@@ -89,8 +89,16 @@ let rec trystep (e : Expr.t) : outcome =
      | Expr.True -> Step then_
      | Expr.False -> Step else_
      | _ -> failwith "The type of cond in if-else is not type [Bool]")
+  | Expr.App { lam; arg } ->
+    (lam, fun lam' -> Expr.App { lam = lam'; arg })
+    |-> fun () ->
+    (arg, fun arg' -> Expr.App { lam; arg = arg' })
+    |-> fun () ->
+    (match lam with
+     | Expr.Lam { x; tau; e } -> Step (Expr.substitute x ~e':arg ~e)
+     | _ -> failwith "The type of lam is not type [Fn]")
   (* Add more cases here! *)
-  | _ ->
+  | Expr.Var _ | _ ->
     raise
       (RuntimeError
          (Printf.sprintf "Reached a stuck state at expression: %s" (Expr.to_string e)))

@@ -1,0 +1,5 @@
+let n : num = 0 in
+let f1 : num -> num = fun (n : num) -> n + 1 in
+let f2 : num -> num = fun (n : num) -> n + 2 in
+let n : bool = (f2 n) > (f1 n) in
+n
