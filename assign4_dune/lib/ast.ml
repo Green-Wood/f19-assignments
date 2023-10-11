@@ -62,6 +62,8 @@ module Type = struct
     | Unit -> Unit
     | Product { left; right } ->
       Product { left = substitute_map rename left; right = substitute_map rename right }
+    | Sum { left; right } ->
+      Sum { left = substitute_map rename left; right = substitute_map rename right }
     (* Add more cases here! *)
     | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
   ;;
@@ -79,6 +81,7 @@ module Type = struct
       | Unit -> Unit
       | Product { left; right } ->
         Product { left = aux depth left; right = aux depth right }
+      | Sum { left; right } -> Sum { left = aux depth left; right = aux depth right }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
     in
@@ -312,6 +315,19 @@ module Expr = struct
     | Pair { left; right } ->
       Pair { left = substitute_map rename left; right = substitute_map rename right }
     | Project { e; d } -> Project { e = substitute_map rename e; d }
+    | Inject { e; d; tau } -> Inject { e = substitute_map rename e; d; tau }
+    | Case { e; xleft; eleft; xright; eright } ->
+      let fresh_xleft = fresh xleft in
+      let fresh_xright = fresh xright in
+      let rename_left = Map.set rename ~key:xleft ~data:(Var fresh_xleft) in
+      let rename_right = Map.set rename ~key:xright ~data:(Var fresh_xright) in
+      Case
+        { e = substitute_map rename e
+        ; xleft = fresh_xleft
+        ; eleft = substitute_map rename_left eleft
+        ; xright = fresh_xright
+        ; eright = substitute_map rename_right eright
+        }
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
@@ -342,6 +358,18 @@ module Expr = struct
       | Unit -> Unit
       | Pair { left; right } -> Pair { left = aux depth left; right = aux depth right }
       | Project { e; d } -> Project { e = aux depth e; d }
+      | Inject { e; d; tau } -> Inject { e = aux depth e; d; tau }
+      | Case { e; xleft; eleft; xright; eright } ->
+        let depth_plus = Map.map depth ~f:(( + ) 1) in
+        let depth_left = Map.set depth_plus ~key:xleft ~data:0 in
+        let depth_right = Map.set depth_plus ~key:xright ~data:0 in
+        Case
+          { e = aux depth e
+          ; xleft = "_"
+          ; eleft = aux depth_left eleft
+          ; xright = "_"
+          ; eright = aux depth_right eright
+          }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in

@@ -107,6 +107,46 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
        Error
          [%string
            "The type of project should be a [Product], but got: (%{e#Expr} : %{tau#Type})"])
+  | Expr.Inject { e; d; tau } ->
+    let%bind.Result tau_e = typecheck_expr ctx e in
+    (match tau with
+     | Type.Sum { left; right } ->
+       let tau_target =
+         match d with
+         | Expr.Left -> left
+         | Expr.Right -> right
+       in
+       if Type.equal tau_e tau_target
+       then Ok tau
+       else
+         Error
+           [%string
+             "The type of inject expression and [Sum] type is incompatible: (%{e#Expr} : \
+              %{tau_e#Type}), ( : %{tau_target#Type})"]
+     | _ ->
+       Error
+         [%string "The result type of inject should be a [Sum], but got: (%{tau#Type})"])
+  | Expr.Case { e; xleft; eleft; xright; eright } ->
+    let%bind.Result tau_e = typecheck_expr ctx e in
+    (match tau_e with
+     | Type.Sum { left; right } ->
+       let%bind.Result tau_left =
+         typecheck_expr (Map.set ctx ~key:xleft ~data:left) eleft
+       in
+       let%bind.Result tau_right =
+         typecheck_expr (Map.set ctx ~key:xright ~data:right) eright
+       in
+       if Type.equal tau_left tau_right
+       then Ok tau_left
+       else
+         Error
+           [%string
+             "The type in two case branches is incompatible: (%{eleft#Expr} : \
+              %{tau_left#Type}), (%{eright#Expr} : %{tau_right#Type})"]
+     | _ ->
+       Error
+         [%string
+           "The type of expr in [case] should be a [Sum], but got: (%{tau_e#Type})"])
   (* Add more cases here! *)
   | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
 ;;

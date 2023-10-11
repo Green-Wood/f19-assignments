@@ -105,7 +105,17 @@ let rec trystep (e : Expr.t) : outcome =
        (match d with
         | Expr.Left -> Step left
         | Expr.Right -> Step right)
-     | _ -> failwith "Type type of project is not type [Pair]")
+     | _ -> failwith "Type project is not type [Pair]")
+  | Expr.Case { e; xleft; eleft; xright; eright } ->
+    (e, fun e' -> Expr.Case { e = e'; xleft; eleft; xright; eright })
+    |-> fun () ->
+    (match e with
+     | Expr.Inject { e = e'; d; tau } ->
+       (match d with
+        | Expr.Left -> Expr.substitute xleft ~e' ~e:eleft
+        | Expr.Right -> Expr.substitute xright ~e' ~e:eright)
+       |> Step
+     | _ -> failwith "Type of case statement is not type [Inject]")
   (* Add more cases here! *)
   | Expr.Var _ | _ ->
     raise

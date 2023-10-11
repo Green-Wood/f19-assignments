@@ -24,6 +24,14 @@ let%expect_test "product" =
     (Ast.Expr.Num 11);
   Test_util.check_type_eval
     {|
+    let n : num = 1 + 2 in
+    let t : num * num = (n, n + 1) in
+    t.L + t.R
+    |}
+    Ast.Type.Num
+    (Ast.Expr.Num 7);
+  Test_util.check_type_eval
+    {|
     let f : num -> num = fun (n : num) -> n + 1 in
     let t : num * bool = (1, true) in
     let n : num = (f (t.L)) in
