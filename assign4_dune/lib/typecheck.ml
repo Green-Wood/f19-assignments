@@ -147,6 +147,15 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
        Error
          [%string
            "The type of expr in [case] should be a [Sum], but got: (%{tau_e#Type})"])
+  | Expr.Fix { x; tau; e } ->
+    let%bind.Result tau_ret = typecheck_expr (Map.set ctx ~key:x ~data:tau) e in
+    if Type.equal tau tau_ret
+    then Ok tau
+    else
+      Error
+        [%string
+          "The type of fix expr should be consistent, but got (x : %{tau#Type}), \
+           (%{e#Expr} : %{tau_ret#Type})"]
   (* Add more cases here! *)
   | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
 ;;

@@ -116,6 +116,7 @@ let rec trystep (e : Expr.t) : outcome =
         | Expr.Right -> Expr.substitute xright ~e' ~e:eright)
        |> Step
      | _ -> failwith "Type of case statement is not type [Inject]")
+  | Expr.Fix { x; tau; e } as e' -> Step (Expr.substitute x ~e' ~e)
   (* Add more cases here! *)
   | Expr.Var _ | _ ->
     raise

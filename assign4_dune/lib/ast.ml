@@ -328,6 +328,10 @@ module Expr = struct
         ; xright = fresh_xright
         ; eright = substitute_map rename_right eright
         }
+    | Fix { x; tau; e } ->
+      let fresh_x = fresh x in
+      let rename = Map.set rename ~key:x ~data:(Var fresh_x) in
+      Fix { x = fresh_x; tau; e = substitute_map rename e }
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
@@ -370,6 +374,9 @@ module Expr = struct
           ; xright = "_"
           ; eright = aux depth_right eright
           }
+      | Fix { x; tau; e } ->
+        let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:x ~data:0 in
+        Fix { x = "_"; tau; e = aux depth e }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in
