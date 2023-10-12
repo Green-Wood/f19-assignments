@@ -117,6 +117,12 @@ let rec trystep (e : Expr.t) : outcome =
        |> Step
      | _ -> failwith "Type of case statement is not type [Inject]")
   | Expr.Fix { x; tau; e } as e' -> Step (Expr.substitute x ~e' ~e)
+  | Expr.TyApp { e; tau } ->
+    (e, fun e' -> Expr.TyApp { e = e'; tau })
+    |-> fun () ->
+    (match e with
+     | Expr.TyLam { a; e } -> Step e
+     | _ -> failwith "Type of type-level application is not type [TyLam]")
   (* Add more cases here! *)
   | Expr.Var _ | _ ->
     raise

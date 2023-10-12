@@ -1,0 +1,17 @@
+let none : forall a . unit + a = tyfun a -> (inj () = L as unit + a) in
+let some : forall a . a -> (unit + a) =
+  tyfun a -> fun (x : a) -> (inj x = R as unit + a)
+in
+let option_map : forall a . forall b . (a -> b) -> (unit + a) -> (unit + b) = 
+  tyfun a -> tyfun b -> fun (f : (a -> b)) -> fun (i : (unit + a)) ->
+  case i {
+    L(x) -> none [b]
+  | R(x) -> (some [b] (f x))
+  }
+in
+let a : unit + num = (some [num] 1) in
+let b : unit + bool = (option_map [num] [bool] (fun (x : num) -> x = 1) a) in 
+case b {
+  L(x) -> false
+| R(n) -> true
+}

@@ -156,6 +156,18 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
         [%string
           "The type of fix expr should be consistent, but got (x : %{tau#Type}), \
            (%{e#Expr} : %{tau_ret#Type})"]
+  | Expr.TyLam { a; e } ->
+    let%map.Result tau = typecheck_expr ctx e in
+    Type.Forall { a; tau }
+  | Expr.TyApp { e; tau = tau' } ->
+    let%bind.Result tau_e = typecheck_expr ctx e in
+    (match tau_e with
+     | Type.Forall { a; tau } -> Ok (Type.substitute a ~tau' ~tau)
+     | _ ->
+       Error
+         [%string
+           "The expre type of type-level application should be [Forall], but got \
+            (%{tau_e#Type})"])
   (* Add more cases here! *)
   | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
 ;;

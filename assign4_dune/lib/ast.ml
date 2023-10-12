@@ -64,6 +64,13 @@ module Type = struct
       Product { left = substitute_map rename left; right = substitute_map rename right }
     | Sum { left; right } ->
       Sum { left = substitute_map rename left; right = substitute_map rename right }
+    | Var a ->
+      Map.find rename a |> Option.value ~default:(Var a)
+      (* TODO produce error when there is free variable? *)
+    | Forall { a; tau } ->
+      let fresh_a = fresh a in
+      let rename = Map.set rename ~key:a ~data:(Var fresh_a) in
+      Forall { a = fresh_a; tau = substitute_map rename tau }
     (* Add more cases here! *)
     | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
   ;;
@@ -82,6 +89,10 @@ module Type = struct
       | Product { left; right } ->
         Product { left = aux depth left; right = aux depth right }
       | Sum { left; right } -> Sum { left = aux depth left; right = aux depth right }
+      | Var a -> Map.find depth a |> Option.value_map ~default:a ~f:Int.to_string |> Var
+      | Forall { a; tau } ->
+        let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:a ~data:0 in
+        Forall { a = "_"; tau = aux depth tau }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
     in
@@ -332,6 +343,8 @@ module Expr = struct
       let fresh_x = fresh x in
       let rename = Map.set rename ~key:x ~data:(Var fresh_x) in
       Fix { x = fresh_x; tau; e = substitute_map rename e }
+    | TyLam { a; e } -> TyLam { a; e = substitute_map rename e }
+    | TyApp { e; tau } -> TyApp { e = substitute_map rename e; tau }
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
@@ -377,6 +390,8 @@ module Expr = struct
       | Fix { x; tau; e } ->
         let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:x ~data:0 in
         Fix { x = "_"; tau; e = aux depth e }
+      | TyLam { a; e } -> TyLam { a; e = aux depth e }
+      | TyApp { e; tau } -> TyApp { e = aux depth e; tau }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in
