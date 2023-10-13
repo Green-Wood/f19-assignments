@@ -71,6 +71,10 @@ module Type = struct
       let fresh_a = fresh a in
       let rename = Map.set rename ~key:a ~data:(Var fresh_a) in
       Forall { a = fresh_a; tau = substitute_map rename tau }
+    | Rec { a; tau } ->
+      let fresh_a = fresh a in
+      let rename = Map.set rename ~key:a ~data:(Var fresh_a) in
+      Rec { a = fresh_a; tau = substitute_map rename tau }
     (* Add more cases here! *)
     | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
   ;;
@@ -93,6 +97,9 @@ module Type = struct
       | Forall { a; tau } ->
         let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:a ~data:0 in
         Forall { a = "_"; tau = aux depth tau }
+      | Rec { a; tau } ->
+        let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:a ~data:0 in
+        Rec { a = "_"; tau = aux depth tau }
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
     in
@@ -345,6 +352,8 @@ module Expr = struct
       Fix { x = fresh_x; tau; e = substitute_map rename e }
     | TyLam { a; e } -> TyLam { a; e = substitute_map rename e }
     | TyApp { e; tau } -> TyApp { e = substitute_map rename e; tau }
+    | Fold_ { e; tau } -> Fold_ { e = substitute_map rename e; tau }
+    | Unfold e -> Unfold (substitute_map rename e)
     (* Put more cases here! *)
     | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
   ;;
@@ -392,6 +401,8 @@ module Expr = struct
         Fix { x = "_"; tau; e = aux depth e }
       | TyLam { a; e } -> TyLam { a; e = aux depth e }
       | TyApp { e; tau } -> TyApp { e = aux depth e; tau }
+      | Fold_ { e; tau } -> Fold_ { e = aux depth e; tau }
+      | Unfold e -> Unfold (aux depth e)
       (* Add more cases here! *)
       | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
     in

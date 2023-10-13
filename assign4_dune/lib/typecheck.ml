@@ -84,8 +84,9 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
        else
          Error
            [%string
-             "The type of function and argument is incompatible: (%{lam#Expr} : \
-              %{tau_lam#Type}) and (%{arg#Expr} : %{tau_arg#Type})"]
+             "The type of function and argument is incompatible:\n\
+              (%{lam#Expr} : %{tau_lam#Type})\n\
+              (%{arg#Expr} : %{tau_arg#Type})"]
      | _ ->
        Error
          [%string
@@ -166,8 +167,28 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
      | _ ->
        Error
          [%string
-           "The expre type of type-level application should be [Forall], but got \
+           "The expr type of type-level application should be [Forall], but got \
             (%{tau_e#Type})"])
+  | Expr.Fold_ { e; tau } ->
+    (match tau with
+     | Type.Rec { a; tau } as tau' ->
+       let%bind.Result tau_e = typecheck_expr ctx e in
+       let target_tau_e = Type.substitute a ~tau' ~tau in
+       if Type.equal target_tau_e tau_e
+       then Ok tau'
+       else
+         Error
+           [%string
+             "The type of expr and rec type is incompatible: (%{e#Expr} : \
+              %{tau_e#Type}), ( : %{target_tau_e#Type})"]
+     | _ ->
+       Error [%string "The expr that fold need to be of type [Rec], but got %{tau#Type}"])
+  | Expr.Unfold e ->
+    let%bind.Result tau_e = typecheck_expr ctx e in
+    (match tau_e with
+     | Type.Rec { a; tau } as tau' -> Ok (Type.substitute a ~tau' ~tau)
+     | _ ->
+       Error [%string "The type of unfold expr should be [Rec], but got %{tau_e#Type}"])
   (* Add more cases here! *)
   | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
 ;;

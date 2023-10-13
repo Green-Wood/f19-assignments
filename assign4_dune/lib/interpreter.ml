@@ -123,6 +123,12 @@ let rec trystep (e : Expr.t) : outcome =
     (match e with
      | Expr.TyLam { a; e } -> Step e
      | _ -> failwith "Type of type-level application is not type [TyLam]")
+  | Expr.Unfold e ->
+    (e, fun e' -> Expr.Unfold e')
+    |-> fun () ->
+    (match e with
+     | Expr.Fold_ { e; tau } -> Step e
+     | _ -> failwith "Type of that apply unfold should be another fold")
   (* Add more cases here! *)
   | Expr.Var _ | _ ->
     raise
