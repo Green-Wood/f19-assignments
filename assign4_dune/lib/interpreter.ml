@@ -129,8 +129,14 @@ let rec trystep (e : Expr.t) : outcome =
     (match e with
      | Expr.Fold_ { e; tau } -> Step e
      | _ -> failwith "Type of that apply unfold should be another fold")
+  | Expr.Import { x; a; e_mod; e_body } ->
+    (e_mod, fun e_mod' -> Expr.Import { x; a; e_mod = e_mod'; e_body })
+    |-> fun () ->
+    (match e_mod with
+     | Expr.Export { e = e'; tau_adt; tau_mod } -> Step (Expr.substitute x ~e' ~e:e_body)
+     | _ -> failwith "Type of import should be export")
   (* Add more cases here! *)
-  | Expr.Var _ | _ ->
+  | Expr.Var _ ->
     raise
       (RuntimeError
          (Printf.sprintf "Reached a stuck state at expression: %s" (Expr.to_string e)))

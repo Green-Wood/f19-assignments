@@ -189,8 +189,29 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
      | Type.Rec { a; tau } as tau' -> Ok (Type.substitute a ~tau' ~tau)
      | _ ->
        Error [%string "The type of unfold expr should be [Rec], but got %{tau_e#Type}"])
-  (* Add more cases here! *)
-  | _ -> Error.raise_s [%message "Typecheck unimplemented for expr" (e : Expr.t)]
+  | Expr.Export { e; tau_adt; tau_mod } ->
+    (match tau_mod with
+     | Type.Exists { a; tau } ->
+       let%bind.Result tau_e = typecheck_expr ctx e in
+       let target_tau_e = Type.substitute a ~tau':tau_adt ~tau in
+       if Type.equal target_tau_e tau_e
+       then Ok tau_mod
+       else
+         Error
+           [%string
+             "The type of expr and export [Exists] type is incompatible: (expr : \
+              %{tau_e#Type}), (exists: target_tau_e##Type)"]
+     | _ ->
+       Error
+         [%string "The type of export expr should be [Exists], but got %{tau_mod#Type}"])
+  | Expr.Import { x; a = beta; e_mod; e_body } ->
+    let%bind.Result tau_mod = typecheck_expr ctx e_mod in
+    (match tau_mod with
+     | Type.Exists { a; tau } ->
+       let tau_x = Type.substitute a ~tau':(Var beta) ~tau in
+       typecheck_expr (Map.set ctx ~key:x ~data:tau_x) e_body
+     | _ ->
+       Error [%string "The expr that import should be [Exists], but got %{tau_mod#Type}"])
 ;;
 
 let typecheck t = typecheck_expr String.Map.empty t

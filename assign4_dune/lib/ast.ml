@@ -75,8 +75,10 @@ module Type = struct
       let fresh_a = fresh a in
       let rename = Map.set rename ~key:a ~data:(Var fresh_a) in
       Rec { a = fresh_a; tau = substitute_map rename tau }
-    (* Add more cases here! *)
-    | _ -> Error.raise_s [%message "Type substitution unimplemented for" (tau : t)]
+    | Exists { a; tau } ->
+      let fresh_a = fresh a in
+      let rename = Map.set rename ~key:a ~data:(Var fresh_a) in
+      Exists { a = fresh_a; tau = substitute_map rename tau }
   ;;
 
   let substitute (x : string) ~(tau' : t) ~(tau : t) : t =
@@ -100,8 +102,9 @@ module Type = struct
       | Rec { a; tau } ->
         let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:a ~data:0 in
         Rec { a = "_"; tau = aux depth tau }
-      (* Add more cases here! *)
-      | _ -> Error.raise_s [%message "Type debruijn unimplemented for" (tau : t)]
+      | Exists { a; tau } ->
+        let depth = Map.map depth ~f:(( + ) 1) |> Map.set ~key:a ~data:0 in
+        Exists { a = "_"; tau = aux depth tau }
     in
     aux String.Map.empty tau
   ;;
@@ -354,8 +357,17 @@ module Expr = struct
     | TyApp { e; tau } -> TyApp { e = substitute_map rename e; tau }
     | Fold_ { e; tau } -> Fold_ { e = substitute_map rename e; tau }
     | Unfold e -> Unfold (substitute_map rename e)
-    (* Put more cases here! *)
-    | _ -> Error.raise_s [%message "Expr substitution unimplemented for" (e : t)]
+    | Export { e; tau_adt; tau_mod } ->
+      Export { e = substitute_map rename e; tau_adt; tau_mod }
+    | Import { x; a; e_mod; e_body } ->
+      let fresh_x = fresh x in
+      let rename_body = Map.set rename ~key:x ~data:(Var fresh_x) in
+      Import
+        { x = fresh_x
+        ; a
+        ; e_mod = substitute_map rename e_mod
+        ; e_body = substitute_map rename_body e_body
+        }
   ;;
 
   let substitute (x : string) ~(e' : t) ~(e : t) : t =
@@ -403,8 +415,10 @@ module Expr = struct
       | TyApp { e; tau } -> TyApp { e = aux depth e; tau }
       | Fold_ { e; tau } -> Fold_ { e = aux depth e; tau }
       | Unfold e -> Unfold (aux depth e)
-      (* Add more cases here! *)
-      | _ -> Error.raise_s [%message "Expr debruijn unimplemented for" (e : t)]
+      | Export { e; tau_adt; tau_mod } -> Export { e = aux depth e; tau_adt; tau_mod }
+      | Import { x; a; e_mod; e_body } ->
+        let depth_body = Map.map depth ~f:(( + ) 1) |> Map.set ~key:x ~data:0 in
+        Import { x = "_"; a; e_mod = aux depth e_mod; e_body = aux depth_body e_body }
     in
     aux String.Map.empty e
   ;;
